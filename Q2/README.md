@@ -71,7 +71,7 @@ To ensure the correctness and robustness of your implementation, you are require
 
 Write a suite of tests that verify the functionality of your `ITask` implementations and the bitpacking logic.
 
-Before you can attempt this task you will need to update the `CMakeLists.txt` to include GTest and create a test executable that runs your tests from your `Question-3.test.cc` file.
+Before you can attempt this task you will need to update the `CMakeLists.txt` to include GTest and create a test executable that runs your tests from your `Question-2.test.cc` file.
 
 ### Task 5: Assumptions
 
