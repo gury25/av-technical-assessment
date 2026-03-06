@@ -20,3 +20,75 @@
 // Resources:
 // https://www.csselectronics.com/pages/can-bus-simple-intro-tutorial
 // https://www.csselectronics.com/pages/can-dbc-file-database-intro
+
+#include <sstream>
+#include <iomanip>
+#include <cstdint>
+
+int main() {
+    std::ifstream logFile("candump.log");
+    std::ofstream outputFile("output.txt");
+    
+    if (!logFile.is_open()) {
+        std::cerr << "Error opening candump.log" << std::endl;
+        return 1;
+    }
+    
+    if (!outputFile.is_open()) {
+        std::cerr << "Error opening output.txt for writing" << std::endl;
+        return 1;
+    }
+    
+    std::string line;
+    while (std::getline(logFile, line)) {
+
+        size_t openParen = line.find('(');
+        size_t closeParen = line.find(')');
+        if (openParen == std::string::npos || closeParen == std::string::npos) {
+            continue;
+        }
+        std::string timestamp = line.substr(openParen + 1, closeParen - openParen - 1);
+
+        size_t hashPos = line.find('#');
+        if (hashPos == std::string::npos) {
+            continue;
+        }
+        
+        size_t msgIdStart = line.rfind(' ', hashPos);
+        if (msgIdStart == std::string::npos) {
+            continue;
+        }
+        msgIdStart++;
+        
+        std::string msgIdStr = line.substr(msgIdStart, hashPos - msgIdStart);
+        uint16_t msgId = std::stoi(msgIdStr, nullptr, 16);
+
+        if (msgId != 0x705) {
+            continue;
+        }
+
+        std::string hexData = line.substr(hashPos + 1);
+
+        if (hexData.length() < 16) {  
+            continue;
+        }
+        
+        uint8_t bytes[8];
+        for (int i = 0; i < 8; i++) {
+            bytes[i] = std::stoi(hexData.substr(i * 2, 2), nullptr, 16);
+        }
+
+        int16_t rawValue = (int16_t)(bytes[4] | (bytes[5] << 8));
+
+        double wheelSpeedRR = rawValue * 0.1;
+        
+        outputFile << "(" << timestamp << "): " << wheelSpeedRR << std::endl;
+    }
+    
+    logFile.close();
+    outputFile.close();
+    
+    std::cout << "Decoding complete. Results written to output.txt" << std::endl;
+    return 0;
+}
+
